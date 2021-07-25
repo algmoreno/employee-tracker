@@ -5,6 +5,7 @@ const { connect } = require('./config/connection');
 function init() {
   startQuestions();
 }
+
 function startQuestions() {
   inquirer.prompt(
     {
@@ -29,6 +30,7 @@ function startQuestions() {
             if (deptTable.length < 1) {
               console.log("Table is empty!")
             }
+            startQuestions();
       })
     }
 
@@ -38,6 +40,7 @@ function startQuestions() {
             if (roleTable.length < 1) {
               console.log("Table is empty!")
             }
+            startQuestions();
           })
       }
 
@@ -47,6 +50,7 @@ function startQuestions() {
           if (employeeTable.length < 1) {
             console.log("Table is empty!")
           }
+          startQuestions();
         })
       }
 
@@ -59,13 +63,12 @@ function startQuestions() {
           }
         )
           .then(results => {
-            console.log(results)
-
             connection.query('INSERT INTO department SET ? ', results, (err, results) => {
               if (err) {
                 console.log('error')
               }
-              console.log('Department Added')
+              console.log('Department Added');
+              startQuestions();
             })
           })
       }
@@ -100,6 +103,7 @@ function startQuestions() {
                   }
                   else {
                     console.log('Role Added')
+                    startQuestions();
                   }
                 })
               })
@@ -137,6 +141,8 @@ function startQuestions() {
                 name: 'role_id',
                 message: "Enter id that matches the employee's role (see table above)"
               }
+              // Can't create employee when manager_id refers to employee role_id and employee has not been
+              // created yet
               // {
               //   type: 'text',
               //   name: 'manager_id',
@@ -152,7 +158,8 @@ function startQuestions() {
                     return
                   }
                   else {
-                    console.log('Employee Added')
+                    console.log('Employee Added');
+                    startQuestions();
                   }
                 })
               })
@@ -176,12 +183,19 @@ function startQuestions() {
         inquirer.prompt([
           {
             type: 'text',
+            name: 'currentRole',
+            message: "Enter employee's current role id"
+          },
+          {
+            type: 'text',
             name: 'role_id',
-            message: "Enter the employee's new role id"
+            message: "Enter employee's new role id"
           }
         ])
         .then(newRole => {
-          connection.query('UPDATE employee SET role_id = ? WHERE id = ?', newRole, (err, results) => {
+          console.log(newRole)
+          const role_id = newRole.role_id;
+          connection.query('UPDATE employee SET id = ? WHERE id = ?', role_id, (err, results) => {
             if (err) {
               console.log(err)
               return
